@@ -7,6 +7,8 @@
 O **LIZ** é um orquestrador extremamente enxuto e direto, escrito **100% em Bash puro**, projetado com um único propósito: pegar o seu sistema Linux atual e transformá-lo em uma ISO instalável e incrivelmente compacta. Sem dependências complexas (sem Node.js, Python ou TypeScript), sem frameworks pesados, apenas a essência do mundo Linux.
 
 > **⚠️ FASE DE TESTES (BETA):** O projeto está em fase de testes. Qualquer bug, erro ou comportamento inesperado deve ser relatado via **Issues** aqui no GitHub. Ajude a lapidar o Liz!
+>
+> **🐧 NOTA DE COMPATIBILIDADE:** O LIZ foi criado e homologado para uso especificamente no **Debian 13**. Ainda não validamos a eficácia do script em outras distribuições (Ubuntu, Arch, Fedora, etc). Por segurança e estabilidade, recomendamos o uso no Debian 13. Caso queira se aventurar e testar em outras distribuições, fique à vontade, mas faça por sua própria conta e risco! Estamos também estudando formas de diminuir ainda mais o tamanho final da ISO.
 
 ---
 
