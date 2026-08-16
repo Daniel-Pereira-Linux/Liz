@@ -342,10 +342,20 @@ phase_squashfs() {
   rm -rf "${merged_dir}/root/"* 2>/dev/null || true
 
   print_coffee_ui "Criando usuário Live permanente..." 26
-  # Evita a falha (race condition) do live-config com o GDM3 criando o usuário nativamente na ISO
-  chroot "${merged_dir}" useradd -m -c "Live User" -s /bin/bash -G sudo user 2>/dev/null || true
-  chroot "${merged_dir}" passwd -d user 2>/dev/null || true
-  chroot "${merged_dir}" usermod -U user 2>/dev/null || true
+  # Evita chroot que pode falhar silenciosamente, injetando os dados direto na veia do Linux!
+  echo "user:x:1000:1000:Live User,,,:/home/user:/bin/bash" >> "${merged_dir}/etc/passwd"
+  echo "user::19000:0:99999:7:::" >> "${merged_dir}/etc/shadow"
+  echo "user:x:1000:" >> "${merged_dir}/etc/group"
+  
+  # Adiciona usuário aos grupos importantes
+  for g in sudo video audio plugdev netdev cdrom dip; do
+    sed -i "/^${g}:/ s/\$/user/" "${merged_dir}/etc/group" 2>/dev/null || true
+  done
+
+  mkdir -p "${merged_dir}/home/user"
+  cp -a "${merged_dir}/etc/skel/." "${merged_dir}/home/user/" 2>/dev/null || true
+  chown -R 1000:1000 "${merged_dir}/home/user"
+
   echo "user ALL=(ALL) NOPASSWD: ALL" > "${merged_dir}/etc/sudoers.d/live-user"
   chmod 440 "${merged_dir}/etc/sudoers.d/live-user"
 
@@ -355,10 +365,12 @@ phase_squashfs() {
   if [[ -f "${gdm_conf}" ]]; then
     sed -i '/AutomaticLoginEnable/d' "${gdm_conf}"
     sed -i '/AutomaticLogin/d' "${gdm_conf}"
+    sed -i '/WaylandEnable/d' "${gdm_conf}"
     if ! grep -q '\[daemon\]' "${gdm_conf}"; then
       echo "[daemon]" >> "${gdm_conf}"
     fi
-    sed -i '/\[daemon\]/a AutomaticLoginEnable=True\nAutomaticLogin=user' "${gdm_conf}"
+    # WaylandEnable=false salva a pátria em VMs travando na interface!
+    sed -i '/\[daemon\]/a WaylandEnable=false\nAutomaticLoginEnable=True\nAutomaticLogin=user' "${gdm_conf}"
   fi
   # SDDM (KDE)
   if [[ -d "${merged_dir}/usr/share/sddm" ]]; then
