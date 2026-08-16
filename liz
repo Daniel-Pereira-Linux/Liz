@@ -329,13 +329,25 @@ phase_squashfs() {
   mount --bind / "${lower_dir}"
   mount -t overlay overlay -o lowerdir="${lower_dir}",upperdir="${upper_dir}",workdir="${work_dir}" "${merged_dir}"
 
-  # Remove usuários não-padrão (UID >= 1000) do clone do sistema
+  print_coffee_ui "Removendo usuários locais da ISO..." 25
+  # Remove usuários com UID >= 1000 do sistema isolado para garantir privacidade
   awk -F: '$3 < 1000 || $1 == "nobody" {print $0}' "${merged_dir}/etc/passwd" > /tmp/passwd.tmp && cat /tmp/passwd.tmp > "${merged_dir}/etc/passwd"
   awk -F: '$3 < 1000 || $1 == "nogroup" {print $0}' "${merged_dir}/etc/group" > /tmp/group.tmp && cat /tmp/group.tmp > "${merged_dir}/etc/group"
   
-  # Remove a pasta home clonada para manter a privacidade na ISO
+  # Sincroniza o shadow para conter apenas os usuários restantes no passwd
+  awk -F: 'NR==FNR{a[$1];next} $1 in a' "${merged_dir}/etc/passwd" "${merged_dir}/etc/shadow" > /tmp/shadow.tmp && cat /tmp/shadow.tmp > "${merged_dir}/etc/shadow"
+
+  # Remove as pastas originais clonadas
   rm -rf "${merged_dir}/home/"* 2>/dev/null || true
   rm -rf "${merged_dir}/root/"* 2>/dev/null || true
+
+  print_coffee_ui "Criando usuário Live permanente..." 26
+  # Evita a falha (race condition) do live-config com o GDM3 criando o usuário nativamente na ISO
+  chroot "${merged_dir}" useradd -m -c "Live User" -s /bin/bash -G sudo user 2>/dev/null || true
+  chroot "${merged_dir}" passwd -d user 2>/dev/null || true
+  chroot "${merged_dir}" usermod -U user 2>/dev/null || true
+  echo "user ALL=(ALL) NOPASSWD: ALL" > "${merged_dir}/etc/sudoers.d/live-user"
+  chmod 440 "${merged_dir}/etc/sudoers.d/live-user"
 
   print_coffee_ui "Forçando Autologin na Interface Gráfica..." 27
   # GDM3 (Debian padrão)
