@@ -354,6 +354,20 @@ phase_squashfs() {
 
   mkdir -p "${merged_dir}/home/user"
   cp -a "${merged_dir}/etc/skel/." "${merged_dir}/home/user/" 2>/dev/null || true
+  
+  # Cria o atalho de Instalação na Área de Trabalho
+  mkdir -p "${merged_dir}/home/user/Desktop"
+  cat << 'EOF' > "${merged_dir}/home/user/Desktop/install-liz.desktop"
+[Desktop Entry]
+Type=Application
+Name=Install Liz
+Comment=Instalar o sistema no disco rígido
+Exec=sudo calamares
+Icon=system-software-install
+Terminal=false
+Categories=System;
+EOF
+  chmod +x "${merged_dir}/home/user/Desktop/install-liz.desktop"
   chown -R 1000:1000 "${merged_dir}/home/user"
 
   echo "user ALL=(ALL) NOPASSWD: ALL" > "${merged_dir}/etc/sudoers.d/live-user"
