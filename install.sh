@@ -57,6 +57,10 @@ case "${FAMILY}" in
   debian)
     log_info "Sistema Debian/Ubuntu detectado. Atualizando pacotes..."
     apt-get update -qq >/dev/null 2>&1
+    log_info "Instalando sistema base live (live-boot, live-config)..."
+    apt-get install -y -qq live-boot live-config live-config-systemd >/dev/null 2>&1 \
+      || log_warn "Falha ao instalar live-boot/live-config (Sua ISO pode não fazer login automático)"
+
     log_info "Instalando squashfs-tools-ng (zstd support)..."
     apt-get install -y -qq squashfs-tools-ng >/dev/null 2>&1 \
       || apt-get install -y -qq squashfs-tools >/dev/null 2>&1 \
