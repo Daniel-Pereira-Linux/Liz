@@ -480,8 +480,8 @@ phase_iso() {
   grub_bin="$(find_grub_mkrescue)"
 
   # Usa o grub-mkrescue para gerar uma ISO híbrida bootável (UEFI/BIOS)
-  # Passamos '-- -iso-level 3' no final para o xorriso interno permitir arquivos > 4GB
-  "${grub_bin}" -o "${iso_file}" "${WORK_DIR}/iso" -- -volid "${ISO_LABEL}" -iso-level 3 >"${iso_log}" 2>&1
+  # Passamos '-- -compliance iso_9660_level=3' no final para o xorriso nativo permitir arquivos > 4GB
+  "${grub_bin}" -o "${iso_file}" "${WORK_DIR}/iso" -- -volid "${ISO_LABEL}" -compliance iso_9660_level=3 >"${iso_log}" 2>&1
 
 
   local exit_code=$?
