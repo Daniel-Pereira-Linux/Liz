@@ -465,16 +465,13 @@ phase_iso() {
 
   local iso_file="${OUTPUT_DIR}/${ISO_NAME}-${ISO_VERSION}-${ISO_ARCH}.iso"
   local iso_log="/tmp/liz-iso.log"
+  local grub_bin
+  grub_bin="$(find_grub_mkrescue)"
 
-  # -iso-level 3: suporta arquivos individuais > 4 GB (essencial para squashfs grandes)
-  xorriso \
-    -as mkisofs \
-    -iso-level 3 \
-    -r -J -joliet-long \
-    -V "${ISO_LABEL}" \
-    -o "${iso_file}" \
-    "${WORK_DIR}/iso" \
-    >"${iso_log}" 2>&1
+  # Usa o grub-mkrescue para gerar uma ISO híbrida bootável (UEFI/BIOS)
+  # Passamos '-- -iso-level 3' no final para o xorriso interno permitir arquivos > 4GB
+  "${grub_bin}" -o "${iso_file}" "${WORK_DIR}/iso" -- -volid "${ISO_LABEL}" -iso-level 3 >"${iso_log}" 2>&1
+
 
   local exit_code=$?
 
