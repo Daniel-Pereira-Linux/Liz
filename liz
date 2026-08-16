@@ -242,6 +242,17 @@ preflight_check() {
   # grub (nome varia por distro)
   if [[ -z "$(find_grub_mkrescue)" ]]; then
     missing+=("grub-mkrescue → dnf: grub2-tools-extra | apt: grub-common")
+  else
+    # Verifica se os pacotes de arquitetura do GRUB e o mtools estão instalados
+    if ! check_dep mtools; then
+      missing+=("mtools        → Necessário para gerar boot UEFI (apt/dnf install mtools)")
+    fi
+    if [[ ! -d "/usr/lib/grub/i386-pc" ]]; then
+      missing+=("grub-pc-bin   → Necessário para boot BIOS (apt install grub-pc-bin)")
+    fi
+    if [[ ! -d "/usr/lib/grub/x86_64-efi" ]]; then
+      missing+=("grub-efi-bin  → Necessário para boot UEFI (apt install grub-efi-amd64-bin)")
+    fi
   fi
 
   # Aviso sobre zstd no mksquashfs (não bloqueia o build)

@@ -68,10 +68,10 @@ case "${FAMILY}" in
       && log_ok "xorriso instalado" \
       || log_warn "Falha ao instalar xorriso"
 
-    log_info "Instalando grub (bios + efi)..."
-    apt-get install -y -qq grub-pc-bin grub-efi-amd64-bin grub-common >/dev/null 2>&1 \
-      && log_ok "grub instalado" \
-      || log_warn "Falha ao instalar grub"
+    log_info "Instalando grub (bios + efi) e mtools..."
+    apt-get install -y -qq grub-common mtools >/dev/null 2>&1 || true
+    apt-get install -y -qq grub-pc-bin >/dev/null 2>&1 || log_warn "grub-pc-bin não instalado (BIOS boot pode falhar)"
+    apt-get install -y -qq grub-efi-amd64-bin >/dev/null 2>&1 || log_warn "grub-efi-amd64-bin não instalado (UEFI boot pode falhar)"
 
     log_info "Instalando isolinux/syslinux..."
     apt-get install -y -qq isolinux syslinux syslinux-common >/dev/null 2>&1 \
