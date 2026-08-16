@@ -357,12 +357,16 @@ phase_squashfs() {
   
   # Cria o atalho de Instalação na Área de Trabalho
   mkdir -p "${merged_dir}/home/user/Desktop"
+  
+  # Remove atalhos originais de instalação do Debian (se existirem) para não confundir
+  rm -f "${merged_dir}/home/user/Desktop/install-debian.desktop" "${merged_dir}/home/user/Desktop/calamares.desktop" 2>/dev/null || true
+  
   cat << 'EOF' > "${merged_dir}/home/user/Desktop/install-liz.desktop"
 [Desktop Entry]
 Type=Application
 Name=Install Liz
 Comment=Instalar o sistema no disco rígido
-Exec=sudo -E calamares
+Exec=sudo -E env LIBGL_ALWAYS_SOFTWARE=1 QT_QPA_PLATFORM=xcb calamares
 Icon=system-software-install
 Terminal=true
 Categories=System;
