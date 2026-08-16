@@ -374,7 +374,7 @@ phase_squashfs() {
 Type=Application
 Name=Install Liz
 Comment=Instalar o sistema no disco rígido
-Exec=sudo -E env LIBGL_ALWAYS_SOFTWARE=1 QT_QPA_PLATFORM=xcb calamares
+Exec=sh -c "xhost +local: && sudo -E env LIBGL_ALWAYS_SOFTWARE=1 QT_QPA_PLATFORM=xcb calamares"
 Icon=system-software-install
 Terminal=true
 Categories=System;
