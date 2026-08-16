@@ -83,8 +83,8 @@ case "${FAMILY}" in
       || log_warn "Falha ao instalar isolinux"
 
     log_info "Instalando Calamares (instalador gráfico)..."
-    apt-get install -y -qq calamares calamares-settings-debian >/dev/null 2>&1 \
-      || apt-get install -y -qq calamares >/dev/null 2>&1 \
+    apt-get install -y -qq calamares calamares-settings-debian libxcb-cursor0 >/dev/null 2>&1 \
+      || apt-get install -y -qq calamares libxcb-cursor0 >/dev/null 2>&1 \
       && log_ok "calamares instalado" \
       || log_warn "Calamares não disponível neste repo — instale manualmente"
     ;;

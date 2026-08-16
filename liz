@@ -363,18 +363,28 @@ phase_squashfs() {
     cp -r "${calamares_src}/." "${merged_dir}/etc/calamares/" 2>/dev/null || true
   fi
 
-  # Cria o atalho de Instalação na Área de Trabalho
-  mkdir -p "${merged_dir}/home/user/Desktop"
-  
+  # Replica a estratégia do penguins-eggs: autoriza o pkexec para o Calamares sem pedir senha (com allow_gui nativo)
+  mkdir -p "${merged_dir}/etc/polkit-1/rules.d"
+  cat << 'EOF' > "${merged_dir}/etc/polkit-1/rules.d/99-calamares-live.rules"
+polkit.addRule(function(action, subject) {
+    if (action.id == "com.github.calamares.calamares.run" && subject.user == "user") {
+        return polkit.Result.YES;
+    }
+});
+EOF
+  chmod 644 "${merged_dir}/etc/polkit-1/rules.d/99-calamares-live.rules"
+
   # Remove atalhos originais de instalação do Debian (se existirem) para não confundir
   rm -f "${merged_dir}/home/user/Desktop/install-debian.desktop" "${merged_dir}/home/user/Desktop/calamares.desktop" 2>/dev/null || true
   
+  # Cria o atalho de Instalação na Área de Trabalho usando o pkexec (que já tem a política nativa allow_gui do calamares)
+  mkdir -p "${merged_dir}/home/user/Desktop"
   cat << 'EOF' > "${merged_dir}/home/user/Desktop/install-liz.desktop"
 [Desktop Entry]
 Type=Application
 Name=Install Liz
 Comment=Instalar o sistema no disco rígido
-Exec=sudo -E env LIBGL_ALWAYS_SOFTWARE=1 calamares -d
+Exec=pkexec env LIBGL_ALWAYS_SOFTWARE=1 calamares -d
 Icon=system-software-install
 Terminal=true
 Categories=System;
