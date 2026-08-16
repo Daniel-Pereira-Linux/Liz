@@ -362,9 +362,9 @@ phase_squashfs() {
 Type=Application
 Name=Install Liz
 Comment=Instalar o sistema no disco rígido
-Exec=sudo calamares
+Exec=sudo -E calamares
 Icon=system-software-install
-Terminal=false
+Terminal=true
 Categories=System;
 EOF
   chmod +x "${merged_dir}/home/user/Desktop/install-liz.desktop"
