@@ -355,6 +355,14 @@ phase_squashfs() {
   mkdir -p "${merged_dir}/home/user"
   cp -a "${merged_dir}/etc/skel/." "${merged_dir}/home/user/" 2>/dev/null || true
   
+  # Injeta as configurações atualizadas do Calamares no ambiente Live
+  local calamares_src
+  calamares_src="$(dirname "$(realpath "$0")")/calamares"
+  if [[ -d "${calamares_src}" ]]; then
+    mkdir -p "${merged_dir}/etc/calamares"
+    cp -r "${calamares_src}/." "${merged_dir}/etc/calamares/" 2>/dev/null || true
+  fi
+
   # Cria o atalho de Instalação na Área de Trabalho
   mkdir -p "${merged_dir}/home/user/Desktop"
   
