@@ -337,6 +337,27 @@ phase_squashfs() {
   rm -rf "${merged_dir}/home/"* 2>/dev/null || true
   rm -rf "${merged_dir}/root/"* 2>/dev/null || true
 
+  print_coffee_ui "Forçando Autologin na Interface Gráfica..." 27
+  # GDM3 (Debian padrão)
+  local gdm_conf="${merged_dir}/etc/gdm3/daemon.conf"
+  if [[ -f "${gdm_conf}" ]]; then
+    sed -i '/AutomaticLoginEnable/d' "${gdm_conf}"
+    sed -i '/AutomaticLogin/d' "${gdm_conf}"
+    if ! grep -q '\[daemon\]' "${gdm_conf}"; then
+      echo "[daemon]" >> "${gdm_conf}"
+    fi
+    sed -i '/\[daemon\]/a AutomaticLoginEnable=True\nAutomaticLogin=user' "${gdm_conf}"
+  fi
+  # SDDM (KDE)
+  if [[ -d "${merged_dir}/usr/share/sddm" ]]; then
+    mkdir -p "${merged_dir}/etc/sddm.conf.d"
+    echo -e "[Autologin]\nUser=user\nRelogin=false" > "${merged_dir}/etc/sddm.conf.d/autologin.conf"
+  fi
+  # LightDM (XFCE/MATE)
+  if [[ -d "${merged_dir}/etc/lightdm" ]]; then
+    echo -e "[Seat:*]\nautologin-user=user\nautologin-user-timeout=0" >> "${merged_dir}/etc/lightdm/lightdm.conf"
+  fi
+
   # Monta o comando de compressão usando o merged (clone limpo)
   local mksq_cmd=(mksquashfs "${merged_dir}" "${WORK_DIR}/iso/live/${SQUASH_FILE}"
     -comp "${COMP_ALGO}"
