@@ -57,9 +57,9 @@ EXCLUDE_DIRS=(
   # Montagens externas
   /mnt /media
 
-  # Dados pessoais
-  /home /root
-
+  # Dados pessoais (Limpos pelo overlayfs, mantemos as pastas originais vazias)
+  # A exclusão física foi movida para o overlay para preservar os diretórios base
+  
   # Cache de pacotes (ocupa muito, pode ser rebaixado)
   /var/cache/dnf
   /var/cache/apt
@@ -278,9 +278,11 @@ preflight_check() {
 }
 
 cleanup() {
-  # Desmonta o sistema de arquivos temporário se ainda montado
-  if mountpoint -q "${WORK_DIR}/rootfs" 2>/dev/null; then
-    umount -lf "${WORK_DIR}/rootfs" 2>/dev/null || true
+  if mountpoint -q "${WORK_DIR}/merged" 2>/dev/null; then
+    umount -lf "${WORK_DIR}/merged" 2>/dev/null || true
+  fi
+  if mountpoint -q "${WORK_DIR}/lower" 2>/dev/null; then
+    umount -lf "${WORK_DIR}/lower" 2>/dev/null || true
   fi
 }
 
@@ -318,8 +320,25 @@ phase_squashfs() {
   local sq_log="/tmp/liz-squashfs.log"
   build_exclude_array
 
-  # Monta o comando de compressão de acordo com o algoritmo disponível
-  local mksq_cmd=(mksquashfs / "${WORK_DIR}/iso/live/${SQUASH_FILE}"
+  local lower_dir="${WORK_DIR}/lower"
+  local upper_dir="${WORK_DIR}/upper"
+  local work_dir="${WORK_DIR}/work"
+  local merged_dir="${WORK_DIR}/merged"
+
+  mkdir -p "${lower_dir}" "${upper_dir}" "${work_dir}" "${merged_dir}"
+  mount --bind / "${lower_dir}"
+  mount -t overlay overlay -o lowerdir="${lower_dir}",upperdir="${upper_dir}",workdir="${work_dir}" "${merged_dir}"
+
+  # Remove usuários não-padrão (UID >= 1000) do clone do sistema
+  awk -F: '$3 < 1000 || $1 == "nobody" {print $0}' "${merged_dir}/etc/passwd" > /tmp/passwd.tmp && cat /tmp/passwd.tmp > "${merged_dir}/etc/passwd"
+  awk -F: '$3 < 1000 || $1 == "nogroup" {print $0}' "${merged_dir}/etc/group" > /tmp/group.tmp && cat /tmp/group.tmp > "${merged_dir}/etc/group"
+  
+  # Remove a pasta home clonada para manter a privacidade na ISO
+  rm -rf "${merged_dir}/home/"* 2>/dev/null || true
+  rm -rf "${merged_dir}/root/"* 2>/dev/null || true
+
+  # Monta o comando de compressão usando o merged (clone limpo)
+  local mksq_cmd=(mksquashfs "${merged_dir}" "${WORK_DIR}/iso/live/${SQUASH_FILE}"
     -comp "${COMP_ALGO}"
     -noappend
     "${EXCLUDE_ARGS[@]}"
